@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Inventory Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .input-section, .summary-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #4facfe;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .records-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .record-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .record-item:hover {
+            background-color: #f8f9ff;
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .totals {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .total-item {
+            margin: 10px 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .slip-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slip-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .slip-header {
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .slip-details {
+            text-align: left;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+
+        .qr-code {
+            margin: 20px 0;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .slip-content, .slip-content * {
+                visibility: visible;
+            }
+            
+            .slip-modal {
+                position: static;
+                background: none;
+            }
+            
+            .btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐾 Animal Inventory Management</h1>
+            <p>Daily Animal Tracking & Record Management System</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">Add Animal Record</h2>
+                <form id="animalForm">
+                    <div class="form-group">
+                        <label for="animalType">Animal Type:</label>
+                        <select id="animalType" required>
+                            <option value="">Select Animal Type</option>
+                            <option value="Cattle">Cattle</option>
+                            <option value="Sheep">Sheep</option>
+                            <option value="Goat">Goat</option>
+                            <option value="Chicken">Chicken</option>
+                            <option value="Duck">Duck</option>
+                            <option value="Pig">Pig</option>
+                            <option value="Horse">Horse</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customAnimalType" id="customLabel" style="display: none;">Custom Animal Type:</label>
+                        <input type="text" id="customAnimalType" style="display: none;" placeholder="Enter custom animal type">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">Quantity:</label>
+                        <input type="number" id="quantity" min="1" required placeholder="Enter number of animals">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Amount (PKR):</label>
+                        <input type="number" id="amount" min="0" step="0.01" required placeholder="Enter total amount in PKR">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="personName">Person Name:</label>
+                        <input type="text" id="personName" required placeholder="Enter person's name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Notes (Optional):</label>
+                        <input type="text" id="notes" placeholder="Additional notes">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Add Record & Generate Slip</button>
+                </form>
+            </div>
+
+            <div class="summary-section">
+                <h2 class="section-title">Daily Summary</h2>
+                <div class="totals">
+                    <div class="total-item">Total Animals: <span id="totalAnimals">0</span></div>
+                    <div class="total-item">Total Amount: PKR <span id="totalAmount">0.00</span></div>
+                    <div class="total-item">Records Today: <span id="recordCount">0</span></div>
+                </div>
+
+                <div class="records-list" id="recordsList">
+                    <p style="text-align: center; color: #999;">No records for today</p>
+                </div>
+
+                <button class="btn btn-secondary" onclick="clearAllRecords()">Clear All Records</button>
+                <button class="btn btn-success" onclick="exportData()">Export Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slip Modal -->
+    <div class="slip-modal" id="slipModal">
+        <div class="slip-content">
+            <span class="close-btn" onclick="closeSlip()">&times;</span>
+            <div class="slip-header">
+                <h2>🐾 Animal Record Slip</h2>
+                <p id="slipDate"></p>
+            </div>
+            <div class="slip-details" id="slipDetails"></div>
+            <div class="qr-code">
+                <canvas id="qrcode"></canvas>
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="printSlip()">Print Slip</button>
+                <button class="btn btn-secondary" onclick="closeSlip()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let records = [];
+        let recordId = 1;
+
+        // Handle animal type selection
+        document.getElementById('animalType').addEventListener('change', function() {
+            const customLabel = document.getElementById('customLabel');
+            const customInput = document.getElementById('customAnimalType');
+            
+            if (this.value === 'Other') {
+                customLabel.style.display = 'block';
+                customInput.style.display = 'block';
+                customInput.required = true;
+            } else {
+                customLabel.style.display = 'none';
+                customInput.style.display = 'none';
+                customInput.required = false;
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('animalForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            try {
+                const animalType = document.getElementById('animalType').value;
+                const customAnimalType = document.getElementById('customAnimalType').value;
+                const quantity = parseInt(document.getElementById('quantity').value);
+                const amount = parseFloat(document.getElementById('amount').value);
+                const personName = document.getElementById('personName').value.trim();
+                const notes = document.getElementById('notes').value.trim();
+                
+                // Validation
+                if (!animalType) {
+                    alert('Please select an animal type');
+                    return;
+                }
+                
+                if (animalType === 'Other' && !customAnimalType.trim()) {
+                    alert('Please enter a custom animal type');
+                    return;
+                }
+                
+                if (isNaN(quantity) || quantity <= 0) {
+                    alert('Please enter a valid quantity');
+                    return;
+                }
+                
+                if (isNaN(amount) || amount <= 0) {
+                    alert('Please enter a valid amount');
+                    return;
+                }
+                
+                if (!personName) {
+                    alert('Please enter person name');
+                    return;
+                }
+                
+                const finalAnimalType = animalType === 'Other' ? customAnimalType.trim() : animalType;
+                
+                const record = {
+                    id: recordId++,
+                    animalType: finalAnimalType,
+                    quantity: quantity,
+                    amount: amount,
+                    personName: personName,
+                    notes: notes,
+                    timestamp: new Date(),
+                    date: new Date().toDateString()
+                };
+                
+                records.push(record);
+                console.log('Record added:', record); // Debug log
+                updateSummary();
+                generateSlip(record);
+                
+                // Reset form
+                this.reset();
+                document.getElementById('customLabel').style.display = 'none';
+                document.getElementById('customAnimalType').style.display = 'none';
+                document.getElementById('customAnimalType').required = false;
+                
+                console.log('Form reset complete'); // Debug log
+                
+            } catch (error) {
+                console.error('Error adding record:', error);
+                alert('Error adding record. Please try again.');
+            }
+        });
+
+        function updateSummary() {
+            const today = new Date().toDateString();
+            const todayRecords = records.filter(record => record.date === today);
+            
+            const totalAnimals = todayRecords.reduce((sum, record) => sum + record.quantity, 0);
+            const totalAmount = todayRecords.reduce((sum, record) => sum + record.amount, 0);
+            
+            document.getElementById('totalAnimals').textContent = totalAnimals;
+            document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+            document.getElementById('recordCount').textContent = todayRecords.length;
+            
+            displayRecords(todayRecords);
+        }
+
+        function displayRecords(recordsToShow) {
+            const recordsList = document.getElementById('recordsList');
+            
+            if (recordsToShow.length === 0) {
+                recordsList.innerHTML = '<p style="text-align: center; color: #999;">No records for today</p>';
+                return;
+            }
+            
+            recordsList.innerHTML = recordsToShow.map(record => `
+                <div class="record-item">
+                    <div>
+                        <strong>${record.animalType}</strong> - ${record.quantity} animals<br>
+                        <small>${record.personName} | PKR ${record.amount.toFixed(2)} | ${record.timestamp.toLocaleTimeString()}</small>
+                    </div>
+                    <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="viewSlip(${record.id})">View Slip</button>
+                </div>
+            `).join('');
+        }
+
+        function generateSlip(record) {
+            const slipDate = document.getElementById('slipDate');
+            const slipDetails = document.getElementById('slipDetails');
+            
+            slipDate.textContent = `Date: ${record.timestamp.toLocaleDateString()} | Time: ${record.timestamp.toLocaleTimeString()}`;
+            
+            slipDetails.innerHTML = `
+                <p><strong>Record ID:</strong> #${record.id.toString().padStart(4, '0')}</p>
+                <p><strong>Animal Type:</strong> ${record.animalType}</p>
+                <p><strong>Quantity:</strong> ${record.quantity} animals</p>
+                <p><strong>Amount:</strong> PKR ${record.amount.toFixed(2)}</p>
+                <p><strong>Person:</strong> ${record.personName}</p>
+                <p><strong>Notes:</strong> ${record.notes || 'None'}</p>
+            `;
+            
+            // Generate QR Code
+            const qrData = JSON.stringify({
+                id: record.id,
+                animalType: record.animalType,
+                quantity: record.quantity,
+                amount: record.amount,
+                personName: record.personName,
+                timestamp: record.timestamp.toISOString()
+            });
+            
+            const canvas = document.getElementById('qrcode');
+            QRCode.toCanvas(canvas, qrData, { width: 200, height: 200 }, function(error) {
+                if (error) console.error(error);
+            });
+            
+            document.getElementById('slipModal').style.display = 'flex';
+        }
+
+        function viewSlip(recordId) {
+            const record = records.find(r => r.id === recordId);
+            if (record) {
+                generateSlip(record);
+            }
+        }
+
+        function closeSlip() {
+            document.getElementById('slipModal').style.display = 'none';
+        }
+
+        function printSlip() {
+            window.print();
+        }
+
+        function clearAllRecords() {
+            if (confirm('Are you sure you want to clear all records? This action cannot be undone.')) {
+                records = [];
+                recordId = 1;
+                updateSummary();
+            }
+        }
+
+        function exportData() {
+            const today = new Date().toDateString();
+            const todayRecords = records.filter(record => record.date === today);
+            
+            if (todayRecords.length === 0) {
+                alert('No records to export for today.');
+                return;
+            }
+            
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                "ID,Animal Type,Quantity,Amount,Person Name,Notes,Date,Time\n" +
+                todayRecords.map(record => 
+                    `${record.id},"${record.animalType}",${record.quantity},${record.amount},"${record.personName}","${record.notes}","${record.timestamp.toLocaleDateString()}","${record.timestamp.toLocaleTimeString()}"`
+                ).join('\n');
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `animal_records_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Initialize the app
+        updateSummary();
+    </script>
+</body>
+</html>
